@@ -1,20 +1,16 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
 const port = process.env.PORT || 5000;
 
-
 //middle wares
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
-
-
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bq6unn4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -23,7 +19,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 const menuCollection = client.db("bistroDB").collection("menu");
@@ -37,56 +33,62 @@ async function run() {
     await client.connect();
 
     //users related api
-    app.get('/users', async(req, res) => {
+    app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
-      res.send(result)
-    })
-    app.post('/users', async(req, res)=>{
+      res.send(result);
+    });
+    app.post("/users", async (req, res) => {
       const user = req.body;
 
-      console.log(user.email);
-
-      const query = {email : user.email}
+      const query = { email: user.email };
       const existingUser = await userCollection.findOne(query);
-      if(existingUser){
-        return res.send({message : 'User Already Exists', insertedId : null})
-      } 
+      if (existingUser) {
+        return res.send({ message: "User Already Exists", insertedId: null });
+      }
 
       const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.delete( '/users/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)}
+      const result = await userCollection.deleteOne(query);
       res.send(result);
     })
 
     //menu related api
-    app.get('/menu', async(req,res)=>{
-        const result = await menuCollection.find().toArray();
-        res.send(result)
-    })
-
+    app.get("/menu", async (req, res) => {
+      const result = await menuCollection.find().toArray();
+      res.send(result);
+    });
 
     //cart collection
-    app.get('/carts', async(req, res)=>{
+    app.get("/carts", async (req, res) => {
       const email = req.query.email;
-      const query = {email : email}
+      const query = { email: email };
       const result = await cartCollection.find(query).toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
-    app.post('/carts', async(req,res)=> {
+    app.post("/carts", async (req, res) => {
       const cartItem = req.body;
       const result = await cartCollection.insertOne(cartItem);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
-    app.delete('/carts/:id', async(req,res)=>{
+    app.delete("/carts/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) };
       const result = await cartCollection.deleteOne(query);
       res.send(result);
-    })
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -94,13 +96,10 @@ async function run() {
 }
 run().catch(console.dir);
 
+app.get("/", async (req, res) => {
+  res.send("Bistro Boss is running after clients");
+});
 
-
-
-app.get('/', async(req, res) => {
-    res.send('Bistro Boss is running after clients')
-})
-
-app.listen(port, ()=>{
-    console.log(`Bistro Boss is running on Port :  ${port}`);
-})
+app.listen(port, () => {
+  console.log(`Bistro Boss is running on Port :  ${port}`);
+});
