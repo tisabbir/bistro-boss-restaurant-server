@@ -30,10 +30,22 @@ const userCollection = client.db("bistroDB").collection("users");
 const reviewCollection = client.db("bistroDB").collection("review");
 const cartCollection = client.db("bistroDB").collection("carts");
 
+//middle ware
+const verifyToken = (req, res, next) => {
+  if(!req.headers.authorization){
+    return res.status(401).send({message : 'Forbidden Access'})
+  }
+  const token = req.headers.authorization.split(' ')[1];
+  console.log("token", token);
+  next()
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+
 
 
     //jwt related api
@@ -44,7 +56,7 @@ async function run() {
     })
 
     //users related api
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyToken, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
