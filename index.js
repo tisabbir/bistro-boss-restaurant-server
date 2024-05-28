@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+//require the jwt and cookie-perser
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
@@ -32,6 +35,14 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+
+    //jwt related api
+    app.post('/jwt', async(req, res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn : '1h'});
+      res.send({token})
+    })
+
     //users related api
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -59,7 +70,7 @@ async function run() {
         },
       };
       const result = await userCollection.updateOne(filter, updatedDoc);
-      res.send(result);
+      res.send(result); 
     });
 
     app.delete("/users/:id", async (req, res) => {
