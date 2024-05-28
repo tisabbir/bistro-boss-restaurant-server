@@ -36,8 +36,14 @@ const verifyToken = (req, res, next) => {
     return res.status(401).send({message : 'Forbidden Access'})
   }
   const token = req.headers.authorization.split(' ')[1];
-  console.log("token", token);
-  next()
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=>{
+    if(err){
+      return res.status(401).send({message : 'Forbidden Access'})
+    }
+    console.log("token", token);
+    req.decoded = decoded;
+    next()
+  })
 }
 
 async function run() {
