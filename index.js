@@ -27,6 +27,7 @@ const client = new MongoClient(uri, {
 });
 
 const menuCollection = client.db("bistroDB").collection("menu");
+const userCollection = client.db("bistroDB").collection("users");
 const reviewCollection = client.db("bistroDB").collection("review");
 const cartCollection = client.db("bistroDB").collection("carts");
 
@@ -35,9 +36,23 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    
+    //users related api
+    app.post('/users', async(req, res)=>{
+      const user = req.body;
 
+      console.log(user.email);
 
+      const query = {email : user.email}
+      const existingUser = await userCollection.findOne(query);
+      if(existingUser){
+        return res.send({message : 'User Already Exists', insertedId : null})
+      } 
+
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    })
+
+    //menu related api
     app.get('/menu', async(req,res)=>{
         const result = await menuCollection.find().toArray();
         res.send(result)
