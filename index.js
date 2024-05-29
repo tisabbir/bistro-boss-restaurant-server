@@ -40,7 +40,6 @@ const verifyToken = (req, res, next) => {
     if(err){
       return res.status(401).send({message : 'Forbidden Access'})
     }
-    console.log("token", token);
     req.decoded = decoded;
     next()
   })
@@ -66,6 +65,27 @@ async function run() {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
+
+    //check if the user is admin or not
+    app.get('/users/admin/:email', verifyToken, async(req, res) => {
+      const email = req.params.email;
+
+      //check if the token belongs to the user who is trying to access this api
+      //if not show unauthorized access
+      if(email !== req.decoded.email){
+        return res.status(403).send({message : 'unauthorized access'})
+      }
+      //if the user owns the token then get the user data from database
+      const query = {email : email}
+      const user = await userCollection.findOne(query);
+      //now check if the user is admin or not
+      let admin = false;
+      if(user){
+        admin = user?.role === 'admin';
+      }
+      //send the state of being admin true or false
+      res.send({admin})
+    })
     app.post("/users", async (req, res) => {
       const user = req.body;
 
