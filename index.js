@@ -122,7 +122,6 @@ async function run() {
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
-
     app.delete("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -135,6 +134,12 @@ async function run() {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
+
+    app.post('/menu', verifyToken, verifyAdmin, async(req, res)=>{
+      const item = req.body;
+      const result = await menuCollection.insertOne(item);
+      res.send(result);
+    })
 
     //cart collection
     app.get("/carts", async (req, res) => {
