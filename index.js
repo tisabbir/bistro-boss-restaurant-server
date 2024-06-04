@@ -7,6 +7,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
+
 const app = express();
 
 const port = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ const menuCollection = client.db("bistroDB").collection("menu");
 const userCollection = client.db("bistroDB").collection("users");
 const reviewCollection = client.db("bistroDB").collection("review");
 const cartCollection = client.db("bistroDB").collection("carts");
+const paymentCollection = client.db("bistroDB").collection("payments");
 
 //middle ware
 const verifyToken = (req, res, next) => {
@@ -208,6 +210,23 @@ async function run() {
       res.send({
         clientSecret : paymentIntent.client_secret,
       })
+    })
+
+
+    //payment
+    app.post('/payments', async(req, res)=>{
+      const payment =req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+      //carefully delete each items from the cart
+      
+      const query = {_id: {
+        $in: payment.cardIds.map(id => new ObjectId(id)) //TODO:why it ObjectId is deprecated?
+      }}
+
+      const deleteResult = await cartCollection.deleteMany(query);
+
+      
+      res.send({paymentResult, deleteResult});
     })
 
     // Send a ping to confirm a successful connection
